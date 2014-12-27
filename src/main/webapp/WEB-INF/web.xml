@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="2.5" xmlns="http://java.sun.com/xml/ns/javaee"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
+http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
+
+
+	<!-- This is the sample Java EE (JEE) web application deployment descriptor 
+		(DD) file for Metis. -->
+
+	<display-name>Metis</display-name>
+
+	<description>Metis is a generic Web Data Service (WDS)</description>
+
+	<!-- Key for the system property that specifies the root directory of this 
+		web app. Applied by WebAppRootListener or Log4jConfigListener. -->
+	<context-param>
+		<param-name>webAppRootKey</param-name>
+		<param-value>metis.root</param-value>
+	</context-param>
+
+	<!-- Location of the Log4J config file. -->
+	<context-param>
+		<param-name>log4jConfigLocation</param-name>
+		<param-value>/WEB-INF/log4j.properties</param-value>
+	</context-param>
+
+	<!-- Configures Log4J for this web app. As this context specifies a context-param 
+		"log4jConfigLocation", its file path is used to load the Log4J configuration, 
+		including periodic refresh checks. Would fall back to default Log4J initialization 
+		(non-refreshing) if no special context-params are given. Exports a "web app 
+		root key", i.e. a system property that specifies the root directory of this 
+		web app, for usage in log file paths. This web app specifies "metis.root" (see 
+		the log4j.properties file). -->
+	<listener>
+		<listener-class>org.springframework.web.util.Log4jConfigListener</listener-class>
+	</listener>
+
+
+	<!-- Metis does not save any state information; therefore it can be distributed -->
+	<distributable />
+
+
+	<!-- Set the default session timeout to 1 minute. -->
+	<session-config>
+		<session-timeout>1</session-timeout>
+	</session-config>
+
+
+	<!-- The <servlet> element declares an instance of a servlet, including 
+		a name used to refer to the servlet by other elements in the file, the class 
+		to use for the servlet, and initialization parameters for the servlet (if 
+		any). You can declare multiple servlets using the same class, but with different 
+		initialization parameters. The name for each servlet must be unique across 
+		the DD. Metis utilizes only one servlet class called 
+		org.ttm.wds.WdsDispatcherServlet. 
+		
+		Each instance of a WdsDispatcherServlet that is declared in this DD must 
+		have a corresponding web application context (WAC) file in the web 
+		application's standard .../WEB-INF directory. By default, the WAC file 
+		name is constructed as follows: <servlet name>-servlet.xml. For 
+		example, the 'sample' WdsDispatcherServlet below should, by default, 
+		have a file in the .../WEB-INF directory called, 'sample-servlet.xml'. 
+		The <servlet name> portion of the file name, is referred to as the 
+		servlet's name space. You can override this default name space 
+		by providing a 'namespace' servlet init parameter (see the test servlet 
+		declaration below for an example). A WAC file is used for defining 
+		Metis's Resource Driven Beans (RDBs) and the JDBC connection pools 
+		that the RDBs use for communicating with their respective data 
+		sources (i.e., resources). -->
+	<servlet>
+		<servlet-name>pusher</servlet-name>
+		<servlet-class>org.metis.MetisServlet</servlet-class>
+		
+		<!-- Use the namespace init param to override the default namespace for 
+		this servlet. Note that doing so will alter the name used to locate 
+		the target WAC file. So for example, if the param below is 
+		uncommented, the servlet will look for a WAC file by the name 
+		of acme-servlet.xml, instead of test-servlet.xml 
+			
+			<init-param> 
+			  <param-name>namespace</param-name> 
+			  <param-value>acme</param-value> 
+			</init-param> 
+		-->
+		
+		<!--  Set this Boolean to true if the requests made to this servlet, 
+		and all it RDBs, must be made via a secure channel; i.e., https. 
+		The default value is false. This init-param will not override an 
+		identical param set via the WAC file. In other words, the value
+		for this init-params will only be assigned to those RDBs that are 
+		not assigned the param via the WAC file. The same is true for the
+		'authenticated', 'agentNames', and 'cacheControl' init-params. -->
+		<init-param> 
+			   <param-name>secure</param-name> 
+			   <param-value>false</param-value> 
+		</init-param> 
+		
+		<!--  Set this Boolean to true if the requests made to this servlet, 
+		and	all it RDBs, must be made by an authenticated end-user.  The 
+		default	is false. -->
+		<init-param> 
+			   <param-name>authenticated</param-name> 
+			   <param-value>false</param-value> 
+		</init-param> 
+		
+		<!--  Un-comment the agentNames init-param and specify your own value 
+		 to assign RDBs the set of names specified by this init-param. 
+		
+		<init-param> 
+			   <param-name>agentNames</param-name> 
+			   <param-value>agent1, agent2, !agent13 </param-value> 
+		</init-param>
+		-->
+		
+		<!-- Un-comment the cacheControl init-param and specify your own 
+	    value to have the RDBs set the cache-control response header to 
+		the specified string value. 
+		 
+		<init-param> 
+			   <param-name>cacheControl</param-name> 
+			   <param-value>private, no-store, max-age=300</param-value> 
+		</init-param>
+		--> 
+
+		<!-- Use the contextConfigLocation init param to explicitly specify the 
+		location of the WAC file. The 'classpath:' prefix is used to specify the 
+		file is located in the web applicatin's classpath. You can also use the 
+		'file:'	prefix. If you do not use a prefix, the file must be located 
+		in the servlet's .../WEB-INF directory.
+			 
+			<init-param> 
+			   <param-name>contextConfigLocation</param-name> 
+			   <param-value>classpath:WebServicesContext.xml</param-value> 
+			</init-param> 
+		-->
+
+		<!-- The <load-on-startup> element indicates that this servlet should be 
+		loaded (instantiated and have its init() called) when the servlet 
+		container is started. The optional contents of this element must be 
+		an integer indicating the order in which the servlet should be loaded. 
+		If the value is a negative integer, or the element is not present, 
+		the container is free to load the servlet whenever it chooses. If 
+		the value is >= 0, the container loads and initializes the servlet 
+		as the application is deployed. The container guarantees that 
+		servlets marked with lower integers are loaded before 
+		servlets marked with higher integers. The WdsDispatcherServlet should 
+		be loaded at server startup time! -->
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+
+	<!-- The <servlet-mapping> element specifies a URL pattern and the name 
+		of a declared servlet to process those requests whose URL matches the pattern. 
+		The URL pattern can use an asterisk (*) at the beginning or end of the pattern 
+		to indicate zero or more of any character. The standard does not support 
+		wildcards in the middle of a string, and does not allow multiple wildcards 
+		in one pattern. The pattern matches the full path of the URL, starting with 
+		and including the forward slash (/) following the domain name. For example, 
+		if the domain name for this web application is www.acme.com, the mapping 
+		rule below will forward all URLs with the pattern www.acme.com/test/ 
+		to the 'test' WdsDispatcherServlet. General syntax for servlet mapping 
+		as per the servlet specification: 1. A string beginning with a '/' character 
+		and ending with a '/*' suffix is used for path mapping. 2. A string beginning 
+		with a '*.' prefix is used as an extension mapping. 3. A string containing 
+		only the '/' character indicates the "default" servlet of the application. 
+		In this case the servlet path is the request URI minus the context path and 
+		the path info is null. 4. All other strings are used for exact matches only. 
+		You may define any number of servlet mappings, including zero; however, for 
+		this particular web application, you must assign the WdsDispatcherServlet(s) 
+		one or more mappings. It is also legal to define more than one mapping for 
+		the same servlet, if you wish to. The previously-mentioned WAC file is used 
+		for mapping URLs, within a servlet's context path, to individual RDBs. For 
+		example, the URL www.acme.com/acme/test/users can be forwarded to a RDB that 
+		has been configured to interact with a database called 'users'. -->
+	<servlet-mapping>
+		<servlet-name>pusher</servlet-name>
+		<url-pattern>/test/*</url-pattern>
+	</servlet-mapping>
+
+	<!-- Metis relies on the hosting JEE servlet container for user authentication 
+		and authorization. In other words, it relies on the container to 
+		control access to the WdsDispatcherServlets that are defined in this DD 
+		and their corresponding RDBs. The <security-constraint> element defines a 
+		security constraint for URLs that match a pattern. If a user accesses a URL 
+		whose path has a security constraint and the user is not signed in, the container 
+		redirects the user to the corresponding sign-in page. The container 
+		redirects the user back to the application URL after successfully 
+		signing in. The JEE web application does not need to do anything else to 
+		ensure that only authenticated users can access the URL. A security constraint 
+		includes an authorization constraint that specifies which users can access 
+		the path. If the authorization constraint specifies a user role of *, then 
+		any authenticated user can access the URL. If the constraint specifies a 
+		user role of admin, then only registered developers (administrators) of the 
+		application can access the URL. The admin role makes it easy to build 
+		administrator-only sections of the site. Please consult your JEE 
+		servlet container's or application server's documentation 
+		to learn how to set up authentication and authorization. These are the links 
+		to a couple of the more popular JEE servlet containers. 
+		Tomcat - http://tomcat.apache.org/tomcat-7.0-doc/realm-howto.html 
+		Jetty - http://docs.codehaus.org/display/JETTY/Jetty+Documentation 
+	-->
+
+	<!-- <error-page> <error-code>202</error-code> <location>/error.jsp</location> 
+		</error-page> -->
+
+
+</web-app>
+

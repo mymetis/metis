@@ -1,0 +1,304 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:mvc="http://www.springframework.org/schema/mvc" 
+	xmlns:p="http://www.springframework.org/schema/p"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd 
+           http://www.springframework.org/schema/util 
+           http://www.springframework.org/schema/util/spring-util-3.0.xsd
+           http://www.springframework.org/schema/mvc 
+	       http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd">
+
+
+	<!-- 
+	This is a sample web application context (WAC) file for an instance of a 
+	Metis servlet. Use this sample WAC file as a template for creating 
+	your own customized version.  
+	
+	Each instance of a Metis servlet (i.e., WdsDispatcherServlet) that is 
+	defined in a JEE web application deployment descriptor file (web.xml), 
+	must have a corresponding WAC file. The WAC file should be located in the 
+	servlet's standard JEE .../WEB-INF directory, which is the same directory 
+	that contains the servlet's web.xml file. 
+		
+	The WAC file's name must be constructed as follows:
+		 
+		       .../WEB-INF/<servlet name>-servlet.xml. 
+		             
+	For example, a WdsDispatcherServlet	with a name of 'sample' must have 
+	a WAC file in it's .../WEB-INF directory called, 'sample-servlet.xml'. 
+	You can have any number of distinctly named	WAC files in the 
+	.../WEB-INF directory; each one corresponding to a 
+	WdsDispatcherServlet that is defined in the web.xml file. 
+		
+	A WAC file is used for defining one or more WdsResourceBeans 
+	(a.k.a., resource-driven bean or RDB for short)	and a single WdsRdbMapper 
+	bean; the latter of the two beans maps incoming HTTP requests to RDBs. The 
+	incoming HTTP requests are the same requests that are mapped to the 
+	corresponding WdsDispatcherServlet. In other words, to the web 
+    application's domain name space. Please refer to the sample web.xml file for 
+	more details on how HTTP requests are mapped to the WdsDispatcherServlet. 
+		
+	So the mapping of URLs, within a Metis web application, follows this 
+	two-step process:
+		 
+	1. The web.xml deployment descriptor is set up to map HTTP requests to 
+	one or more instances of a WdsDispatcherServlet. For example, the web.xml
+	file has a	mapping rule or pattern that maps all URLs with 
+	the root domain path of "www.acme.com/acme/sample" to a 
+	WdsDispatcherServlet with the name 'sample'. 
+		
+	2. After receiving a HTTP request, the WdsDispatcherServlet gives the 
+	request to its corresponding WdsRdbMapper bean, which is defined in the 
+	WdsDispatcherServlet's WAC file. The WdsRdbMapper bean is responsible
+	for mapping the HTTP requests to their respective RDBs, which are also 
+	defined in the WAC file. For example, an RDB mapping rule in the WAC 
+	file can specify that all URLs with the	www.acme.com/sample/tickets 
+	path are to be handled by the RDB with the bean id or name of 'tickets'. 
+	To map URLs to RDBs, the WdsRdbMapper uses an implementation of the 
+	Ant-style path patterns	(see http://ant.apache.org/manual/dirtasks.html), 
+	which are very similar to the file inclusion patterns found in UNIX. All 
+	patterns assigned to a WdsRdbMapper are relative to the 
+	WdsDispatcherServlet's <servlet-mapping> URL, which can be considered 
+	the root path or directory. 
+		
+	Only one WdsRdbMapper bean can be defined in a WAC file. The example 
+	WdsRdbMapper declaration below includes some sample RDB mapping 
+	patterns/rules. As previously mentioned, these Ant-style patterns look 
+	very much like the patterns used in UNIX. For example, '*' matches zero 
+	or more characters and '?' matches one character. Examples: *.java matches
+	.java, x.java and FooBar.java, but not FooBar.xml (does not end with 
+	.java). ?.java matches x.java, A.java, but	not .java or xyz.java (both 
+	don't have one character before .java). Combinations of *'s and ?'s are 
+	allowed. -->
+		
+		
+	<!--  The <mvc:resources> tag sets up a handler for serving "static" content. 
+	The mapping attribute is set to /static/**, which includes an Ant-style 
+	wild card to indicate that the path must begin with /static, but may 
+	include any sub-path thereof. The location attribute indicates the 
+	location of the files to be served. As configured here, any requests 
+	whose paths begin with /static will be automatically served from the /static 
+	folder at the root of the application. Therefore, all of your images, 
+	stylesheets, JavaScript, and other static content needs to be kept in 
+	the application’s /static folder. -->
+	<mvc:resources mapping="/static/**" location="/static/"/>
+
+
+	<!-- This is an example WdsRdbMapper for this WAC file. All WAC files 
+	must include one and only one WdsRdbMapper bean definition. It is the 
+	responsibility of this bean to map incoming HTTP requests to their 
+	respective RDBs. 
+	
+	This sample WdsRdbMapper definition defines three mapping rules, and 
+	YOU MUST SPECIFY ONE AND ONLY ONE RULE PER LINE.  
+		
+	Any RDB that is assigned to the WdsRdbMapper's 'mappings' property 
+	*must* be defined in the WAC file, else a fatal exception will 
+	occur.  -->
+	<bean id="handlerMapping" class="org.metis.pull.RdbMapper">
+		<property name="mappings">
+			<value>
+				<!-- URLs ending with '/tickets' will be mapped to the RDB 
+				with a bean	id of 'tickets' -->
+				/tickets=tickets
+				<!-- URLs ending with '.../*/customers' will be mapped to 
+				the RDB with a bean id of 'customers' -->
+				/*/customers=customers
+				<!-- URLs ending with a prefix of '/ex/ite', followed by any 
+				number of characters, will be mapped to the RDB	with a bean 
+				id of 'itemsrdb'. For example, assuming the WdsDispatcherServlet's 
+				<servlet-mapping> is '/sample' and the domain is www.acme.com, 
+				the absolute URL of www.acme.com/sample/ex/items will get mapped 
+				to the 'itemsrdb' bean. -->
+				/ex/ite*=items
+			</value>
+		</property>
+	</bean>
+	
+	<!-- You can also use Spring's 'p' namespace to define the WdsRdbMapper's 
+	mapping properties. For example, as an alternative, you can use this 
+	bean definition instead of the one above: 
+	
+	<bean id="handlerMapping" class="org.ttm.wds.WdsRdbMapper" 
+	      p:mappings-ref="rdbMappings"/>
+	
+	With the above example, the bean definition is referencing a list of 
+	properties that are defined using the 'util:properites' tag. For 
+	example, 
+	
+	<util:properties id="rdbMappings">
+      <prop key="/*/customers">customers</prop>
+      <prop key="/tickets">tickets</prop>
+      <prop key="/ex/ite*">items</prop>
+    </util:properties>
+    
+    Using 'util:properties' is a bit more cumbersome; however, it may come 
+    in handy during development/test when you may have multiple lists of 
+    mapping rules and want to switch between those different lists.  
+	-->
+
+
+	<!-- The bean definition below defines a RDB called, 'customers'. A RDB 
+	 can be viewed as a statically configured, multi-thread capable 
+	 database client that runs within the context or instance of a Metis 
+	 WdsDispatcherServlet. 
+		
+	A RDB is mapped to one or more URIs and is invoked by the WdsRdbMapper
+	bean (see above) to service an HTTP request. A WAC file, like this 
+	one, must contain one or more RDB definitions, and each RDB is mapped, 
+	via the WdsRdbMapper's bean definition, to one or more URIs. 
+		
+	The RDB must be assigned from one to four sets of SQL statements, with 
+	each set being assigned to one of the following HTTP methods: GET, PUT, 
+	POST, and DELETE. Note the use of the word 'set' and not 'list'. All 
+	SQL statements that are assigned to a particular HTTP method must be 
+	distinct.  
+	
+	If the RDB has not been assigned any SQL statements, an exception 
+	will be thrown when the corresponding WdsDispatcherServlet
+	is loaded by the servlet container. 
+		
+	The sample 'customers' RDB definition below, assigns a set of SQL 
+	statements to the GET method. Note how the Spring 'p' namespace 
+	is used to shorten the XML and how the 'sqls4Get' property is assigned 
+	a reference to a set of SQL statements that is defined outside the	bean 
+	definition.
+		
+	The RDB is also assigned a reference to a JDBC DataSource. All RDBs 
+	must be assigned one and only one DataSource, or else a fatal 
+	exception will occur. 
+	-->
+	<bean id="customers" class="org.metis.pull.WdsResourceBean"
+	   p:sqls4Get-ref="customerList4Get"
+	   p:dataSource-ref="dataSource">
+	</bean>
+	
+
+	<!-- This RDB definition assigns a set of SQL statements to the GET method.
+	Note how, in this case,	the Spring 'p' namespace is 'not' used and how 
+	the assignment for the 'sqls4Get' property is made within the bean 
+	definition. See the Metis user's guide for details on how to define 
+	the SQL statements; in particular, how to parameterize them. -->
+	<bean id="tickets" class="org.metis.pull.WdsResourceBean">
+	   <property name="sqls4Get">
+		 <list>
+			<value>select date from tickets where id = `integer:id`</value>
+			<value>select venueName from tickets where venueName like 
+			concat(`char:venue`,'%') </value>
+		 </list>
+	   </property>
+	   <property name="dataSource" ref="dataSource" /> 
+	</bean>
+	
+	
+	<!-- This RDB definition assigns all four HTTP methods a set of SQL 
+	 statements.  -->
+	<bean id="items" class="org.metis.pull.WdsResourceBean"
+		  p:sqls4Get-ref="itemsList4Get" 
+		  p:sqls4Put-ref="itemsList4Put" 
+		  p:sqls4Post-ref="itemsList4Post" 
+		  p:sqls4Delete-ref="itemsList4Delete" 
+		  p:dataSource-ref="dataSource">
+	</bean>
+	    
+	<!-- The following are sets of SQL statements that are referenced by the 
+	RDB definitions. -->
+
+	<util:list id="customerList4Get">
+	   <value>select first, last from customers</value>
+		<value>select first, last from customers where id = `integer:id`</value>
+		<value>select first from customers where first like 
+		       concat(`char:first`,'%')
+		</value>
+	</util:list>
+	<util:list id="itemsList4Get">
+		<value>select itemName from items where id = `integer:id`</value>
+		<value>select itemName from items where itemName like 
+		       concat(`char:name` || '%')
+		</value>
+	</util:list>
+	<util:list id="itemsList4Post">
+		<value>insert into items values(`integer:id`,`char:name`)
+		</value>
+	</util:list>
+	<util:list id="itemsList4Put">
+	   <!-- This is an example of a call'able statement. Note that you do not 
+	   have to start and end the string with '{' and '}', respectively. The 
+	   parameters default to 'in' paramters so 'in' is optional; as 
+	   illustrated in the 'call bar' example.  -->
+		<value>call foo(`integer:id:in`, `char:name:in`)</value>
+		<value>call bar(`integer:price`, `char:name:in`)</value>
+	   </util:list>
+	   <util:list id="itemsList4Delete">
+		<value>delete from items where id =`integer:id`</value>
+	</util:list>
+	
+	<!-- 
+	This is an example configuration for a JDBC connection pool manager, 
+	which is referenced by the RDBs as a DataSource. Metis uses the 
+	Apache Tomcat JDBC Connection Pool package. All RDBs must be wired
+	to a pool manager. Please refer to the following URL for more 
+	detailed information on this Apache package and, in particular, 
+	all its configuration properties.   
+		
+		http://tomcat.apache.org/tomcat-7.0-doc/jdbc-pool.html
+		
+    Note the use of the 'destroy-method' attribute, to ensure the pool 
+	is closed when the Spring container shuts down. 
+		
+	The first four properties (driverClassName, url, username, password) must
+	be specified. The last five are a subset of all the remaining properties
+	that, if not specified, are given default values. Please refer to the 
+	above-mentioned URL for a list of all the properties and their default 
+	values. 
+	 
+	The driverClassName property specifies the fully qualified class name of 
+	the	JDBC driver that is assigned to the pool manager. In this example, 
+	it has been assigned the name of the MySQL JDBC driver. The url property 
+	is used	for specifying the complete	URL that is used for acquiring 
+	connections	to the database. Finally, the username 	and password 
+	properties are used to	authenticate when acquiring a connecting to 
+	the database.
+	
+	Note: The maxWait property is used for specifying maximum number of 
+	milliseconds that the pool manager will wait (when there are no available 
+	connections) for a connection to be returned before throwing an exception.
+	The default value is 30000 (30 seconds), which is a relatively long time;
+	therefore, it is recommended that you reduce this time.
+		
+	You can configure any number of DataSource beans and wire RDBs to the 
+	different DataSources; however, all DataSources must have distinct bean 
+	ids.  
+	
+	Each DBMS's JDBC driver has unqiue properties that can be passed to the 
+	driver as query parameters. For example, the following URL is used for
+	assigning the 'noAccessToProcedureBodies' boolean property to the MySQL
+	JDBC driver. 
+	
+	"jdbc:mysql://127.0.0.1:3306/gumpu?noAccessToProcedureBodies=true"
+	
+	Please refer to your DBMS's JDBC driver for more information on its 
+	configuration properties. 
+	
+	-->
+	<bean id="dataSource" class="org.apache.tomcat.jdbc.pool.DataSource"
+		destroy-method="close">
+	<!-- The driverClassName property specifies the fully qualified Java class 
+		name of the JDBC driver to be used. The driver has to be accessible from 
+		the same classloader as this web application; in other words, it needs to 
+		be in this web application's classpath. -->
+		<property name="driverClassName" value="com.mysql.jdbc.Driver" />
+		<property name="url" value="jdbc:mysql://127.0.0.1:3306/myDatabase" />
+		<property name="username" value="admin" />
+		<property name="password" value="admin" />
+		<property name="initialSize" value="10" />
+		<property name="maxActive" value="10" />
+		<property name="maxIdle" value="5" />
+		<property name="minIdle" value="2" />
+		<property name="maxWait" value="2000" />
+	 </bean>
+ 	
+</beans>

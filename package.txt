@@ -1,0 +1,17 @@
+To create the project's WAR file, run the following command from the project's root directory:
+
+$ mvn -Dmaven.test.skip=true clean install
+
+The resulting WAR file can be found in the project's 'target' directory. The
+above command will also download all the necessary dependencies (i.e., jar files).
+
+Under <root-dir>/src/main, you'll find a 'webapp' directory. That's the directory
+that marks this project as a JEE web application project and tells the above 
+command to create the WAR file and it corresponding directory hierarchy in the 
+'target' directory. 
+
+The WAR file that is created, serves only as a template. It will need to be 
+extracted at some other location, its configuration files (i.e., xml files)
+updated and/or added, then re-archived using the jar tool. The resulting
+WAR file will most probably also need to be renamed.  
+

@@ -1,0 +1,257 @@
+
+Use this maven command to run all tests
+
+mvn test
+
+Use this maven command to run a single test class
+
+mvn -Dtest=<class name> test
+
+For example, 
+
+mvn -Dtest=TestCircle test
+
+You may also use patterns to run a number of tests:
+
+mvn -Dtest=TestCi*le test
+
+And you may use multiple names/patterns, separated by commas:
+
+mvn -Dtest=TestSquare,TestCi*le test
+
+The following example passes the serverurl property value to the tests
+
+mvn -Denv.serverurl=http://www.acme.com:8080 test
+
+And here's how a test picks it up
+
+@Test
+public void test() {
+  System.out.println("Server URL = " + System.getProperty("serverurl"));
+}
+
+To run a test method within a test class
+mvn -Dtest=HttpClientTest#TestA test
+
+Other useful maven commands
+----------------------------
+mvn clean          (cleans the project, i.e. delete the target directory)
+mvn compile        (compiles the source code)
+mvn test-compile   (compiles just the test classes)
+mvn test           (if required compiles the source code, then runs the unit tests)
+mvn package        (compiles, tests then packages the jar or war file)
+mvn clean install  (cleans the project, compiles, tests, packages and installs the jar or war file)
+mvn install        (compiles, tests, packages and installs the jar or war file)
+mvn -o install     (compiles, tests, packages and installs the jar or war file in offline mode)
+mvn -Dmaven.test.skip package       (package without running the tests)
+mvn -Dmaven.test.skip clean install  (clean and install without running tests)
+mvn -o test         (test offline)
+
+
+
+================
+
+By default, ResultSets are completely retrieved and stored in memory. 
+In most cases this is the most efficient way to operate, and due to 
+the design of the MySQL network protocol is easier to implement. If 
+you are working with ResultSets that have a large number of rows 
+or large values, and cannot allocate heap space in your JVM for 
+the memory required, you can tell the driver to stream the results 
+back one row at a time.
+
+B.4.14: Can MySQL 5.6 stored routines return result sets? 
+Stored procedures can, but stored functions cannot. If you perform 
+an ordinary SELECT inside a stored procedure, the result set is 
+returned directly to the client.
+
+=================
+Go to this link to learn about about Browsers' Single Origin Policy (SOP)
+and how to get around this using Apache HTTPD. 
+
+http://www.gwtproject.org/doc/latest/DevGuideServerCommunication.html
+
+Refer to the section "Using Tomcat with Apache HTTPD and a proxy"
+
+There is also the Cross-Origin Resource Sharing filter that allows an app
+developers to get around this restriction. 
+
+https://developer.mozilla.org/en-US/docs/HTTP/Access_control_CORS
+
+The CORS standard is used to enable cross-site HTTP requests for invocations 
+of the "XMLHttpRequest" API in a cross-site manner.
+
+This is the Tomcat CORS filter. We'll need to add this to the documentation
+
+http://tomcat.apache.org/tomcat-7.0-doc/config/filter.html#CORS_Filter
+
+There is also this filter:
+
+http://software.dzhuvinov.com/cors-filter.html
+
+So I don't think we need to deliver our own filter and we can instead just
+refer end users to these filters. Jetty also has its own CORS filter. 
+
+
+======================
+
+
+Notes regarding PUT and POST
+
+CREATING WITH PUT
+----------------
+The HTTP definition of PUT states that it can be used to 'create' or
+'update' a resource on the server. The HTTP specification states that
+PUT is idempotent. For example, no matter how many times we tell the
+server to ���create��� an Order, the same bits are stored at the
+/orders/233 location. Sometimes a PUT request will fail and the
+client won���t know if the request was delivered and processed at the
+server. Idempotency guarantees that it���s OK for the client to
+retransmit the PUT operation and not worry about any adverse side
+effects. 
+
+The disadvantage of using PUT to create resources is that
+the client has to provide the unique ID that represents the object it
+is creating. While it is usually possible for the client to generate
+this unique ID, most application designers prefer that their servers
+(usually through their databases) create this ID. In a hypothetical
+order entry system, you want the DBMS to control the generation of
+resource IDs. So what does the client do? It can can switch to using POST!
+
+If a new resource is created, the origin server MUST inform the user 
+agent via the 201 (Created) response. If an existing resource is modified, 
+either the 200 (OK) or 204 (No Content) response codes SHOULD be sent to 
+indicate successful completion of the request.
+
+If the URI is mapped to an 'insert', we return a 201, else if it is mapped
+to an update, we return a 200
+
+
+CREATING WITH POST
+------------------
+Creating an Order, Customer, or Product using the POST method is a little more 
+complex than using PUT. To create an Order with POST, the client sends a 
+representation of the new object it is creating to the parent URI of its 
+representation, leaving out the numeric target ID. For example:
+
+POST /orders HTTP/1.1
+Content-Type: application/xml
+
+<order>
+   <total>$199.02</total>
+   <date>December 22, 2008 06:56</date>
+...
+</order>
+
+The service receives the POST message, processes the JSON or UrlEncoded), and 
+creates a new order in the database using a "database-generated unique ID". 
+While this approach works perfectly fine, we've left our client in a quandary. 
+What if the client wants to edit, update, or cancel the order it just posted? 
+What is the ID of the new order? What URI can we use to interact with the new 
+resource? To resolve this issue, we will add a bit of additional information 
+to the HTTP response message. The client would receive a message something like 
+this:
+
+HTTP/1.1 201 Created
+Content-Type: application/xml
+Location: http://example.com/orders/233  <-----==
+
+<order id="233">
+   <link rel="self" href="http://example.com/orders/233"/>
+   <total>$199.02</total>
+   <date>December 22, 2008 06:56</date>
+...
+</order>
+
+HTTP requires that if POST creates a new resource that it respond with a code of 201, 
+(Created) (just like PUT). The "Location" header in the response message provides a 
+URI to the client so it knows where to further interact with the Order that was created, 
+i.e., if the client wanted to update the Order. It is optional whether the server sends 
+the representation of the newly created Order with the response. Here, we send back an 
+XML representation of the Order that was just created with the ID attribute set to the 
+one generated by our database as well as a link element.
+
+
+UPDATING WITH PUT 
+-----------------
+
+We model updating an Order using the HTTP PUT method. The client PUTs a new 
+representation of the object it is updating to the exact URI location that represents the 
+object. For example, let's say we wanted to change the price of a product from $199.99 to 
+$149.99. Here's what the request would look like:
+
+PUT /orders HTTP/1.1
+Content-Type: application/xml
+
+<product id="111">
+   <name>iPhone</name>
+   <cost>$149.99</cost>
+</product>
+
+PUT is great because it is idempotent. No matter how many times we transmit this PUT request, 
+the underlying Product will still have the same final state.
+
+When a resource is updated with PUT, the HTTP specification requires that we send a response code 
+of 200,  and a response message body or a response code of 204, (No Content) without any 
+response body. In our system, we will send a status of 204 and no response message.
+
+NOTE
+
+We could use POST to update an individual Order, but then the client would have to assume the 
+update was nonidempotent and we would have to take duplicate message processing into account.
+
+----------------------
+Credentials for connecting to the Oracle instance on AWS
+
+master user name: ttmdev
+password:         ttm88dev
+db name / sid:    gumpu
+port:             1521
+url:              ttm-oracle.c8ywmbp77ofk.us-west-2.rds.amazonaws.com
+
+
+example anonymous block to iterate through cursor
+
+SET SERVEROUTPUT ON
+
+DECLARE
+  cursor1 SYS_REFCURSOR;
+  stno number;
+BEGIN
+  getmajors('MATH', cursor1);
+  LOOP
+    FETCH cursor1 INTO stno;
+    EXIT WHEN cursor1%NOTFOUND;
+    dbms_output.put_line( stno );
+  END LOOP;
+
+  CLOSE cursor1;
+END;
+/
+
+===================== PUSH ================
+
+We'll use Hazelcast to implement distributed locks and hashtables. 
+The purpose of doing this is to eliminate identical SQL Jobs,
+that are distributed across multiple JVMs, from issuing the
+same query. Let one job issue the query and the result can 
+be shared with the other identical Jobs. 
+
+Each instance of a SqlStmnt is given a hash based on the 
+SQL statement that is assigned to it. Each SQL job is 
+assigned a hash based on the params assigned to it. The 
+combination of both hashes will be used to uniquely identify 
+a SQL job across multiple instances of Metis. That same value 
+can also be used to identify Hazelcast objects.
+
+There is just one Hazelcast cluster with a groupName of "metis"
+and each DispatcherServlet creates an instance of that Hazelcast 
+cluster. The SQL jobs coordinate their objects by running a 
+Hash on "JDBCUrl + SQL Statement + Params". Now we need to
+figure out how to read Context wide init params!  
+ 
+    
+
+ 
+
+
+

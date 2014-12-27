@@ -1,0 +1,546 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:hz="http://www.hazelcast.com/schema/spring"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd 
+           http://www.springframework.org/schema/util 
+           http://www.springframework.org/schema/util/spring-util-3.0.xsd
+           http://www.springframework.org/schema/mvc 
+	       http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd
+	       http://www.hazelcast.com/schema/spring
+           http://www.hazelcast.com/schema/spring/hazelcast-spring-3.0.xsd">
+
+	<!-- TODO: Should we leave this in? -->
+	<mvc:resources mapping="/static/**" location="/static/" />
+
+	<!-- This test WAC file is to be used with the SimpleContextTest junit test 
+		class -->
+	<bean id="handlerMapping" class="org.metis.pull.RdbMapper">
+		<property name="mappings">
+			<value>
+				/users=usersrdb
+				/tickets=ticketsrdb
+				/rooms=roomsrdb
+				/rooms/**=roomsrdb
+				/spaces=spacesrdb
+				/students=student
+				/students/**=student
+				/funcs=func
+				/funcs/**=func
+				/hctA1=hctA1rdb
+				/hctA2=hctA2rdb
+				/hctA3=hctA3rdb
+				/clientpost=clientpostrdb
+				/clientput=clientputrdb
+				/clientdel=clientdelrdb
+				/clientsignedint=clientsignedintrdb
+				/clientchar=clientcharrdb
+				/clientfloat=clientfloatrdb
+				/clientbit=clientbitrdb
+				/clientnum=clientnumrdb
+				/clienttime=clienttimerdb
+			</value>
+		</property>
+	</bean>
+
+	<!-- rdb for ClientTimeTest.java -->
+	<bean id="clienttimerdb" class="org.metis.pull.WdsResourceBean">
+		<property name="sqls4Get">
+			<list>
+				<value>select * from timeDate</value>
+				<value>select * from timeDate where id = `integer:id`</value>
+			</list>
+		</property>
+		<property name="sqls4Delete">
+			<list>
+				<value>delete from timeDate where id=`integer:id`</value>
+				<value>delete from timeDate where aDate=`date:aDate`</value>
+			</list>
+		</property>
+		<property name="sqls4Put">
+			<list>
+				<value>insert into timeDate values (`integer:id`,`time:aTime`,
+					`timestamp:aTimeStamp`,`date:aDate`)
+				</value>
+			</list>
+		</property>
+		<property name="sqls4Post">
+			<list>
+				<value>insert into timeDate(aTime, aTimeStamp, aDate) values
+					(`time:aTime`,`timestamp:aTimeStamp`,`date:aDate`)
+				</value>
+			</list>
+		</property>
+		<property name="secure" value="#{false}" />
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<!-- rdb for ClientNumTest.java -->
+	<bean id="clientnumrdb" class="org.metis.pull.WdsResourceBean">
+		<property name="sqls4Get">
+			<list>
+				<value>select * from numericDecimal</value>
+				<value>select * from numericDecimal where id=`integer:id`</value>
+			</list>
+		</property>
+		<property name="sqls4Delete">
+			<list>
+				<value>delete from numericDecimal where id=`integer:id`</value>
+				<value>delete from numericDecimal where aNumeric=`numeric:aNumeric`
+				</value>
+			</list>
+		</property>
+		<property name="sqls4Put">
+			<list>
+				<value>insert into numericDecimal values
+					(`integer:id`,`numeric:aNumeric`, `decimal:aDecimal`)
+				</value>
+			</list>
+		</property>
+		<property name="sqls4Post">
+			<list>
+				<value>insert into numericDecimal(aNumeric, aDecimal) values
+					(`numeric:aNumeric`,`decimal:aDecimal`)
+				</value>
+			</list>
+		</property>
+		<property name="secure" value="#{false}" />
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<!-- rdb for ClientBitTest.java -->
+	<bean id="clientbitrdb" class="org.metis.pull.WdsResourceBean">
+		<property name="sqls4Get">
+			<list>
+				<value>select * from bitBoolean</value>
+				<value>select * from bitBoolean where id = `integer:id`</value>
+			</list>
+		</property>
+		<property name="sqls4Delete">
+			<list>
+				<value>delete from bitBoolean where id=`integer:id`</value>
+				<value>delete from bitBoolean where aBit=`bit:aBit`</value>
+			</list>
+		</property>
+		<property name="sqls4Put">
+			<list>
+				<value>insert into bitBoolean values (`integer:id`,`bit:aBit`,
+					`boolean:aBoolean`)
+				</value>
+			</list>
+		</property>
+		<property name="sqls4Post">
+			<list>
+				<value>insert into bitBoolean(aBit, aBoolean) values
+					(`bit:aBit`,`boolean:aBoolean`)
+				</value>
+			</list>
+		</property>
+		<property name="secure" value="#{false}" />
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<!-- rdb for ClientFloatTest.java -->
+	<bean id="clientfloatrdb" class="org.metis.pull.WdsResourceBean">
+		<property name="sqls4Get">
+			<list>
+				<value>select * from floatTest</value>
+				<value>select * from floatTest where id=`integer:id`</value>
+			</list>
+		</property>
+		<property name="sqls4Delete">
+			<list>
+				<value>delete from floatTest where aDouble=`double:aDouble`</value>
+				<value>delete from floatTest where id=`integer:id`</value>
+			</list>
+		</property>
+		<property name="sqls4Put">
+			<list>
+				<value>insert into floatTest values
+					(`integer:id`,`double:aDouble`,`float:aFloat`,`real:aReal`)
+				</value>
+			</list>
+		</property>
+		<property name="sqls4Post">
+			<list>
+				<value>insert into floatTest(aDouble, aFloat, aReal) values
+					(`double:aDouble`,`float:aFloat`,`real:aReal`)
+				</value>
+			</list>
+		</property>
+		<property name="secure" value="#{false}" />
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<!-- rdb for ClientCharTest.java -->
+	<bean id="clientcharrdb" class="org.metis.pull.WdsResourceBean">
+		<property name="sqls4Get">
+			<list>
+				<value>select * from charTest</value>
+			</list>
+		</property>
+		<property name="sqls4Delete">
+			<list>
+				<value>delete from charTest where aChar=`char:aChar`</value>
+			</list>
+		</property>
+		<property name="sqls4Put">
+			<list>
+				<value>insert into charTest values (`char:aChar`, `nchar:aNchar`,
+					`varchar:aVarChar`, `nvarchar:aNvarChar`,
+					`longvarchar:aLongVarChar`, `longnvarchar:aLongNvarChar`)
+				</value>
+			</list>
+		</property>
+		<property name="sqls4Post">
+			<list>
+				<value>insert into charTest(aChar, aNchar, aVarChar, aLongNvarChar)
+					values (`char:aChar`, `nchar:aNchar`, `varchar:aVarChar`,
+					`longnvarchar:aLongNvarChar`)
+				</value>
+			</list>
+		</property>
+		<property name="secure" value="#{false}" />
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<!-- rdb for ClientPost.java -->
+	<bean id="clientpostrdb" class="org.metis.pull.WdsResourceBean">
+		<property name="sqls4Get">
+			<list>
+				<value>select * from car</value>
+			</list>
+		</property>
+		<property name="sqls4Delete">
+			<list>
+				<value>delete from car where make=`varchar:make`</value>
+			</list>
+		</property>
+		<property name="sqls4Post">
+			<list>
+				<value>insert into car (make, model, mpg) values
+					(`varchar:make`,`varchar:model`,`integer:mpg`)
+				</value>
+				<value>insert into car values
+					(`integer:id`,`varchar:make`,`varchar:model`,`integer:mpg`)
+				</value>
+			</list>
+		</property>
+		<property name="secure" value="#{false}" />
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<!-- rdb for ClientPut.java -->
+	<bean id="clientputrdb" class="org.metis.pull.WdsResourceBean">
+		<property name="sqls4Get">
+			<list>
+				<value>select * from car</value>
+			</list>
+		</property>
+		<property name="sqls4Delete">
+			<list>
+				<value>delete from car where make=`varchar:make`</value>
+			</list>
+		</property>
+		<property name="sqls4Put">
+			<list>
+				<value>insert into car (make, model, mpg) values
+					(`varchar:make`,`varchar:model`,`integer:mpg`)
+				</value>
+				<value>insert into car values
+					(`integer:id`,`varchar:make`,`varchar:model`,`integer:mpg`)
+				</value>
+			</list>
+		</property>
+		<property name="sqls4Post">
+			<list>
+				<value>insert into car values
+					(`integer:id`,`varchar:make`,`varchar:model`,`integer:mpg`)
+				</value>
+			</list>
+		</property>
+		<property name="secure" value="#{false}" />
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<!-- rdb for ClientDelete.java -->
+	<bean id="clientdelrdb" class="org.metis.pull.WdsResourceBean">
+		<property name="sqls4Get">
+			<list>
+				<value>select * from car</value>
+			</list>
+		</property>
+		<property name="sqls4Delete">
+			<list>
+				<value>delete from car where make=`varchar:make`</value>
+			</list>
+		</property>
+		<property name="sqls4Post">
+			<list>
+				<value>insert into car (make, model, mpg) values
+					(`varchar:make`,`varchar:model`,`integer:mpg`)
+				</value>
+			</list>
+		</property>
+		<property name="secure" value="#{false}" />
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<!-- rdb for ClientIntegerTest.java -->
+	<bean id="clientsignedintrdb" class="org.metis.pull.WdsResourceBean">
+		<property name="sqls4Get">
+			<list>
+				<value>select * from signedInt</value>
+				<value>select * from signedInt where aTinyInt = `integer:aTinyInt`
+				</value>
+			</list>
+		</property>
+		<property name="sqls4Delete">
+			<list>
+				<value>delete from signedInt where aTinyInt=`tinyint:aTinyInt`
+				</value>
+			</list>
+		</property>
+		<property name="sqls4Put">
+			<list>
+				<value>insert into signedInt values
+					(`tinyint:aTinyInt`,`smallint:aSmallInt`,`integer:aInteger`,`bigint:aBigInt`)
+				</value>
+			</list>
+		</property>
+		<property name="secure" value="#{false}" />
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<!-- rdb for HttpClientTest:TestA -->
+	<bean id="hctA1rdb" class="org.metis.pull.WdsResourceBean">
+		<property name="sqls4Get">
+			<list>
+				<value>select * from room</value>
+				<value>select * from room where bldg=`integer:bldg`</value>
+			</list>
+		</property>
+		<property name="secure" value="#{false}" />
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<!-- rdb for HttpClientTest:TestA -->
+	<bean id="hctA2rdb" class="org.metis.pull.WdsResourceBean">
+		<property name="sqls4Get">
+			<list>
+				<value>select * from room</value>
+				<value>select * from room where bldg=`integer:bldg`</value>
+			</list>
+		</property>
+		<property name="secure" value="#{false}" />
+		<property name="dataSource" ref="dataSource" />
+		<property name="agentNames" value="AllowedAgent1,AllowedAgent2" />
+	</bean>
+
+	<!-- rdb for HttpClientTest:TestA -->
+	<bean id="hctA3rdb" class="org.metis.pull.WdsResourceBean">
+		<property name="sqls4Get">
+			<list>
+				<value>select * from room</value>
+				<value>select * from room where bldg=`integer:bldg`</value>
+			</list>
+		</property>
+		<property name="secure" value="#{false}" />
+		<property name="dataSource" ref="dataSource" />
+		<property name="agentNames" value="!NotAllowedAgent1,!NotAllowedAgent2" />
+	</bean>
+
+	<!-- rdb for HttpClientTest:TestB -->
+	<bean id="hctB1rdb" class="org.metis.pull.WdsResourceBean">
+		<property name="sqls4Get">
+			<list>
+				<value>select * from room</value>
+				<value>select * from room where bldg=`integer:bldg`</value>
+			</list>
+		</property>
+		<property name="secure" value="#{false}" />
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<bean id="roomsrdb" class="org.metis.pull.WdsResourceBean">
+		<property name="sqls4Get">
+			<list>
+				<value>select * from room</value>
+				<value>select * from room where bldg=`integer:bldg`</value>
+				<value>select * from room where bldg=`integer:bldg1` or
+					bldg=`integer:bldg2`
+				</value>
+			</list>
+		</property>
+		<property name="sqls4Put">
+			<list>
+				<value>insert into room values
+					(`integer:bldg`,`integer:room`,`integer:capacity`,`char:ohead`)
+				</value>
+			</list>
+		</property>
+		<property name="sqls4Delete">
+			<list>
+				<value>delete from room where bldg=`integer:bldg`</value>
+			</list>
+		</property>
+		<property name="dataSource" ref="dataSource" />
+		<property name="agentNames" value="!fooAgent1,!fooAgent2" />
+	</bean>
+
+	<bean id="spacesrdb" class="org.metis.pull.WdsResourceBean">
+		<property name="sqls4Get">
+			<list>
+				<value>select * from pspace where id=`integer:id`</value>
+				<value>select * from pspace where lot=`integer:lot`</value>
+				<value>select * from pspace where lot=`integer:lot` and
+					id=`integer:id`
+				</value>
+			</list>
+		</property>
+		<property name="sqls4Post">
+			<list>
+				<value>insert into pspace (lot) values (`integer:lot`)</value>
+				<value>update pspace set lot = `integer:lot` where id = `integer:id`
+				</value>
+			</list>
+		</property>
+		<property name="sqls4Delete">
+			<list>
+				<value>delete from pspace where id =`integer:id`</value>
+			</list>
+		</property>
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<bean id="student" class="org.metis.pull.WdsResourceBean">
+		<property name="sqls4Get">
+			<list>
+				<value>select stno from student where stno > `integer:stno` order by
+					stno asc
+				</value>
+				<value>select stno from student where major = `char:major`</value>
+				<value>select * from student where sname like
+					concat(`char:name`,'%') </value>
+			</list>
+		</property>
+		<property name="sqls4Put">
+			<list>
+				<value>insert into student (stno,sname,major,class,bdate)
+					values
+					(`integer:stno`,`char:sname`,`char:major`,`integer:class`,`date:bdate`)
+				</value>
+			</list>
+		</property>
+		<property name="sqls4Delete">
+			<list>
+				<value>delete from student where stno =`integer:stno`</value>
+			</list>
+		</property>
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<!-- Note that stored procedures and functions that return data (e.g., an 
+		out param or result set) to the client must be invoked by a GET method. A 
+		PUT and POST is meant to update a resource and not return data from it, so 
+		don't use POST and PUT for procedures and functions that return data. -->
+	<bean id="func" class="org.metis.pull.WdsResourceBean">
+		<property name="sqls4Get">
+			<list>
+				<value>`char:ostring` = call hello(`char:name:in`)</value>
+				<value>call getmajors(`char:major`) </value>
+				<value>call getmajors2(`char:major`,`integer:class`) </value>
+				<value>call getmajors3(`char:major`,`char:name`,
+					`integer:count:out`)
+				</value>
+			</list>
+		</property>
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+
+	<!-- This defines an RDB that is secure and has been assigned a list, which 
+		is called 'list4Get', of SQL statements for the GET method. Note how the 
+		Spring 'p' namespace is used to shorten the XML and how the 'sqls4Get' property 
+		is assigned a list outside the bean definition. Also, the RDB has been assigned 
+		to types of devices; therefore, this RDB only services those two types of 
+		devices; all others are disallowed. -->
+	<bean id="usersrdb" class="org.metis.pull.WdsResourceBean"
+		p:secure="#{true}" p:sqls4Get-ref="list4Get" p:dataSource-ref="dataSource"
+		p:agentNames="foobarDevice,foobarDevice2">
+	</bean>
+
+
+	<!-- This defines an RDB that is not secure and has been assigned a list 
+		of SQL statements for the GET method. Note how, in this case, the Spring 
+		'p' namespace is not used and how the assignment for the 'sqls4Get' property 
+		is made within the bean definition. -->
+	<bean id="ticketsrdb" class="org.metis.pull.WdsResourceBean">
+		<property name="sqls4Get">
+			<list>
+				<value>select first, last from users where id = `integer:id`</value>
+				<value>select first from users where first like `char:first` || '%'
+				</value>
+			</list>
+		</property>
+		<property name="secure" value="#{false}" />
+		<property name="dataSource" ref="dataSource" />
+		<property name="agentNames" value="!fooAgent1,!fooAgent2" />
+	</bean>
+
+
+	<!-- These are distinct lists of SQL statements that can be referenced by 
+		the RDBs. -->
+
+	<!-- For test purposes, this list must have two or more entries -->
+	<util:list id="list4Get">
+		<value>select first, last from users where id = `integer:id`</value>
+		<value>select first from users where first like `char:first` || '%'
+		</value>
+		<value>select first, last, phone from users where first like
+			`char:first` || '%' and last like `char:last` || '%'		</value>
+	</util:list>
+
+	<util:list id="list4Post">
+		<value>insert into users values(`varchar:first`,`varchar:last`)
+		</value>
+	</util:list>
+
+	<util:list id="list4Put">
+		<value>call foobar(`char:name:inout`)</value>
+	</util:list>
+
+	<util:list id="list4Delete">
+		<value>delete from users where id =`integer:id`</value>
+	</util:list>
+
+	<bean id="dataSource" class="org.apache.tomcat.jdbc.pool.DataSource"
+		destroy-method="close">
+		<property name="driverClassName" value="com.mysql.jdbc.Driver" />
+		<property name="url"
+			value="jdbc:mysql://127.0.0.1:3306/gumpu?noAccessToProcedureBodies=true" />
+		<property name="username" value="gumper" />
+		<property name="password" value="gumper" />
+		<property name="initialSize" value="5" />
+		<property name="maxActive" value="10" />
+		<property name="maxIdle" value="5" />
+		<property name="minIdle" value="2" />
+		<!-- <property name="defaultAutoCommit" value="false" /> -->
+	</bean>
+
+	<hz:hazelcast id="hazel">
+		<hz:config>
+			<hz:group name="metis" password="password" />
+			<hz:network port="5701" port-auto-increment="false">
+				<hz:join>
+					<hz:multicast enabled="true" multicast-group="224.2.2.3"
+						multicast-port="54327" />					
+				</hz:join>
+			</hz:network>			
+		</hz:config>
+	</hz:hazelcast>
+
+
+</beans>

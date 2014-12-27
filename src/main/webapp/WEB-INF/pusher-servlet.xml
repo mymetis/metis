@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:websocket="http://www.springframework.org/schema/websocket"
+	xmlns:hz="http://www.hazelcast.com/schema/spring"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd 
+           http://www.springframework.org/schema/util 
+           http://www.springframework.org/schema/util/spring-util-3.0.xsd
+           http://www.springframework.org/schema/mvc 
+	       http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd
+	       http://www.springframework.org/schema/websocket
+           http://www.springframework.org/schema/websocket/spring-websocket-4.0.xsd
+           http://www.hazelcast.com/schema/spring
+           http://www.hazelcast.com/schema/spring/hazelcast-spring-3.0.xsd">
+
+	<!-- TODO: Should we leave this in? -->
+	<mvc:resources mapping="/static/**" location="/static/" />
+
+	<!-- Mappings for Resource Driven Beans (RDBs) -->
+	<bean id="handlerMapping" class="org.metis.pull.RdbMapper">
+		<property name="mappings">
+			<value>
+				/student=student
+				/student/**=student
+				/section=section
+				/section/**=section
+			</value>
+		</property>
+	</bean>
+
+	<!-- Mapping for Push Notification Beans (PNBs) -->
+	<websocket:handlers>
+		<websocket:mapping path="/studentnotify/**" handler="studentnotify" />
+		<websocket:mapping path="/sectionnotify/**" handler="sectionnotify" />
+	</websocket:handlers>
+
+	<!-- Use this bean to configure the properties the underlying WebSocket 
+		engine exposes such as message buffer sizes, idle timeout, and others. -->
+	<bean
+		class="org.springframework.web.socket.server.standard.ServletServerContainerFactoryBean">
+		<!-- Metis does not define a MessageHandler.Partial for incoming text messages, 
+			so incoming text messages must be buffered so the entire message can be delivered 
+			in a single call to the registered MessageHandler.Whole for text messages. 
+			The default buffer size for text messages is 8192 bytes. This may be changed 
+			by setting maxTextMessageBufferSize to the desired value in bytes. Note that 
+			Metis uses relatively small packet sizes, so there neither a need for Partial 
+			message handlers not packets size greate than 8192. -->
+		<property name="maxTextMessageBufferSize" value="8192" />
+		<!-- <property name="maxSessionIdleTimeout" value="0" /> -->
+	</bean>
+
+	<!-- PNB for STUDENT table This Pusher Notification Bean (PBN) is used for 
+		sending notifications on the STUDENT table. -->
+	<bean id="studentnotify" class="org.metis.push.PusherBean">
+		<property name="sqls4Get">
+			<list>
+				<value>select stno from student where stno > `integer:stno` order by
+					stno asc [180]
+				</value>
+				<value>select stno from student where major = `char:major`[2:10:10]
+				</value>
+				<value>select sname from student where sname = `char:name` [2:10:7]
+				</value>
+			</list>
+		</property>
+		<property name="dataSource" ref="dataSource" />
+		<property name="hazelcastInstance" ref="hazelFred" />
+	</bean>
+
+
+	<!-- PNB for SECTION table This Pusher Notification Bean (PBN) is used for 
+		sending notifications on the SECTION table. -->
+	<bean id="sectionnotify" class="org.metis.push.PusherBean">
+		<property name="sqls4Get">
+			<list>
+				<value>select count(*) from section [2:10:10]</value>
+			</list>
+		</property>
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+
+	<!-- RDB used for accessing STUDENT table -->
+	<bean id="student" class="org.metis.pull.WdsResourceBean">
+		<property name="sqls4Put">
+			<list>
+				<value>insert into student (stno,sname,major,class,bdate)
+					values
+					(`integer:stno`,`char:sname`,`char:major`,`integer:class`,`date:bdate`)
+				</value>
+			</list>
+		</property>
+		<property name="sqls4Delete">
+			<list>
+				<value>delete from student where stno =`integer:stno`</value>
+			</list>
+		</property>
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+
+	<!-- RDB used for accessing SECTION table -->
+	<bean id="section" class="org.metis.pull.WdsResourceBean">
+		<property name="sqls4Put">
+			<list>
+				<value>insert into section
+					(section_id,course_num,semester,year,instructor,bldg,room)
+					values
+					(`integer:id`,`char:course_num`,`char:semester`,`char:year`,
+					`char:instructor`,`integer:bldg`,`integer:room`)
+				</value>
+			</list>
+		</property>
+		<property name="sqls4Delete">
+			<list>
+				<value>delete from section where section_id =`integer:id`</value>
+			</list>
+		</property>
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+
+
+	<!-- JDBC Conection Pool used by both RDBs and PNBs -->
+	<bean id="dataSource" class="org.apache.tomcat.jdbc.pool.DataSource"
+		destroy-method="close">
+		<property name="driverClassName" value="com.mysql.jdbc.Driver" />
+		<property name="url"
+			value="jdbc:mysql://127.0.0.1:3306/gumpu?noAccessToProcedureBodies=true" />
+		<property name="username" value="gumper" />
+		<property name="password" value="gumper" />
+		<property name="initialSize" value="5" />
+		<property name="maxActive" value="10" />
+		<property name="maxIdle" value="5" />
+		<property name="minIdle" value="2" />
+		<!-- <property name="defaultAutoCommit" value="false" /> -->
+	</bean>
+
+	<!-- Configures a Hazelcast Instance (cluster group) called "Fred". -->
+	<hz:hazelcast id="hazelFred">
+		<hz:config>
+			<hz:group name="Fred" password="password" />
+			<hz:network port="5701" port-auto-increment="true">
+				<hz:join>
+					<hz:multicast enabled="true" multicast-group="224.2.2.3"
+						multicast-port="54327" />
+				</hz:join>
+			</hz:network>
+		</hz:config>
+	</hz:hazelcast>
+
+	<!-- This is the "Wilma" Hazelcast instance (cluster group), which is separate 
+		from the "Fred" instance. Wilma and Fred will not communicate with one another 
+		<hz:hazelcast id="hazelWilma"> <hz:config> <hz:group name="Wilma" password="password" 
+		/> <hz:network port="5701" port-auto-increment="true"> <hz:join> <hz:multicast 
+		enabled="true" multicast-group="224.2.2.3" multicast-port="54327" /> </hz:join> 
+		</hz:network> </hz:config> </hz:hazelcast> -->
+
+</beans>
