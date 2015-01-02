@@ -24,9 +24,6 @@ import org.springframework.web.servlet.DispatcherServlet;
 import org.springframework.context.ApplicationContext;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
-
-import static org.metis.utils.Statics.*;
-
 import org.metis.pull.WdsResourceBean;
 import org.metis.push.PusherBean;
 

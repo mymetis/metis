@@ -188,7 +188,7 @@ public class WdsResourceBean extends AbstractController implements
 	private String dbUrl;
 
 	/**
-	 * The name of the servlet that this PushBean belongs to.
+	 * The name of the servlet that this bean pertains to.
 	 */
 	private String servletName;
 
@@ -201,7 +201,7 @@ public class WdsResourceBean extends AbstractController implements
 	/**
 	 * Used for setting the Expires response header. For example, the DBA may
 	 * know that a certain entity doesn't change very often; maybe once a day,
-	 * at most. So setting this property to 10000, tells the client that the
+	 * at most. So setting this property to 10, tells the client that the
 	 * data retrieved from a GET is unlikley to change in the next 10 seconds.
 	 */
 	private long expires;
@@ -1440,7 +1440,7 @@ public class WdsResourceBean extends AbstractController implements
 					response.setHeader(CACHE_CNTRL_HDR,
 							(getCacheControl() != null) ? getCacheControl()
 									: DFLT_CACHE_CNTRL_STR);
-					response.setHeader(PRAGMA_HDR, PRAGMA_NO_CACHE_STR);
+					response.setHeader(PRAGMA_HDR, PRAGMA_NO_CACHE_STR);					
 					response.setDateHeader(EXPIRES_HDR, currentTime
 							+ (getExpires() * 1000));
 				} else {
